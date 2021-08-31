@@ -1,0 +1,22 @@
+{
+    "elasticsearch": {
+        "url":"http://127.0.0.1:",
+        "port":"9200",
+        "elasticsearchIndices": {
+            "COLLECTION": {
+              "index":"warehouse_5cd00dc877ed980f69410932.crm11",
+              "type":"_doc",
+              "collectionName":"crm11"
+            }
+        }
+    },
+    "mongodb": {
+      "url": "mongodb://",
+      "username":"",
+      "password":"",
+      "server_ip":"137.71.42.119",
+      "local_server_ip":"localhost",
+      "port":"29017",
+      "databaseName":"warehouse_5cd00dc877ed980f69410932"
+    }
+}

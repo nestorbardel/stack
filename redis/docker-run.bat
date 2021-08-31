@@ -1,0 +1,1 @@
+docker run --name grupoagni-redis -d grupoagni/redis:1.0.0

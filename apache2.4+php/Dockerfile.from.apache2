@@ -1,0 +1,19 @@
+FROM httpd:2.4
+LABEL maintainer="amadeorubenamado@gmail.com"
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG TZ
+ENV TZ ${TZ:-America/Argentina/Buenos_Aires}
+ENV HOME=/root 
+
+RUN apt-get update && \
+    apt-get -y install php libapache2-mod-php
+
+RUN apt-get install -y curl vim 
+RUN apt install -y wget php-cli php-zip unzip
+
+COPY resource/composer.sh /root
+RUN chmod +x /root/composer.sh
+RUN /root/composer.sh
+
+COPY ./public-html/ /var/www/html/

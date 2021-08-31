@@ -1,0 +1,291 @@
+# Require stack variable MYSQL_ROOT_PWD=PezGQE1lgvOFKOfv
+version: '3.1'
+
+services:
+  mongodb:
+      image: grupoagni/mongodb_stack:1.0.0
+      environment:
+        - MONGODB_ROOT_PASSWORD=    
+      networks:
+        net:
+          aliases:
+            - mongodb
+      ports:
+        - 27018:27017
+      volumes:
+        - mongovolume:/data/db
+      deploy:
+        mode: replicated
+        replicas: 1
+        restart_policy:
+          condition: any
+          max_attempts: 3
+          window: 120s
+        resources:
+          limits:
+            memory: 1024m
+  mongodb_delphi:
+    image: grupoagni/mongodb_stack:1.0.0
+    networks:
+      net:
+        aliases:
+          - mongodb_delphi
+    ports:
+      - 29017:27017
+    volumes:
+      - mongodelphivolume:/data/db
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 512m
+  mongopassport:
+    image: grupoagni/mongodb_stack:1.0.0
+    environment:
+      - MONGODB_ROOT_PASSWORD=example    
+    networks:
+      net:
+        aliases:
+          - mongopassport
+    ports:
+      - 28017:27017
+    volumes:
+      - mongopassportvolume:/data/db
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 512m
+  elasticsearch:
+    image: grupoagni/elastic_search:1.0.0
+    networks:
+      net:
+        aliases:
+          - elasticsearch
+    ports:
+      - 9200:9200
+      - 5601:5601
+    volumes:
+      - elasticvolume:/home/elasticsearch:rw
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 1024m
+  db_sql_delphi:
+    image: grupoagni/db_sql_delphi:1.0.0
+    networks:    
+      net:
+        aliases:
+          - mysql
+    ports:
+      - 3306:3306
+    volumes:
+      - ../../mysql/data:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=cs_vote
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=password
+      - TZ=America/Argentina/Buenos_Aires
+      - LANG=es_AR.utf8
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 512m
+  apache_delphi_application:
+    image: grupoagni/apache_delphi_application:2.0.0
+    networks:    
+      net:
+      rproxy:
+    ports:
+      - 80:80
+    volumes:
+      - ../../DataWarehouse/web:/home/datawarehouse/web
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - SERVICE_PORTS=80
+      - LANG=es_AR.utf8
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 1024m
+  apache_p2p_application:
+    image: php:7.4-apache_application
+    networks:    
+      net:
+      rproxy:
+    ports:
+      - 8082:80
+    volumes:
+      - ../../P2P:/home/p2p
+      - ./uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - SERVICE_PORTS=8082
+      - LANG=es_AR.utf8
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 1024m
+  apigateway:
+    image: php:7.4-apache_apigateway
+    networks:    
+      net:
+        aliases:
+          - apigateway
+      rproxy:
+    ports:
+      - 8080:80
+    volumes:
+      - ../../api-sidekick:/home/api-sidekick
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - SERVICE_PORTS=8080
+      - LANG=es_AR.utf8
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 1024m
+  microservice:
+    image: php:7.4-apache_microservice
+    networks:    
+      net:
+      rproxy:
+    ports:
+      - 8081:80
+    volumes:
+      - ../../microservice-p2p:/home/microservice-p2p
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - SERVICE_PORTS=8081
+      - LANG=es_AR.utf8
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 2048m
+  twilio:
+    image: php:7.4-apache_microservice
+    networks:    
+      net:
+      rproxy:
+    ports:
+      - 8090:80
+    volumes:
+      - ../../twilio:/home/twilio
+      - ./twilio.conf:/etc/apache2/sites-enabled/000-default.conf
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - SERVICE_PORTS=8081
+      - LANG=es_AR.utf8
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 512m
+  microservice-search:
+    image: php:7.4-apache_microservice_search
+    networks:    
+      net:
+      rproxy:
+    ports:
+      - 8085:80
+    volumes:
+      - ../../microservice-search:/home/microservice_elastic
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - SERVICE_PORTS=8090
+      - LANG=es_AR.utf8
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 1024m
+  redis:
+      image: redis:alpine
+      command: redis-server
+      ports:
+      - 6380:6379
+      deploy:
+        resources:
+          limits:
+            memory: 512m 
+      networks:    
+        net:
+          aliases:
+            - redis
+  redis-commander:
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    environment:
+    - REDIS_HOSTS=redis:redis:6379
+    ports:
+    - "8083:8081"
+    networks:    
+      net:
+        aliases:
+          - redis-commander
+networks:
+    net:
+    rproxy:
+      external: true
+volumes:
+  mongodelphivolume:
+  mongopassportvolume:
+  mongovolume:
+  elasticvolume:

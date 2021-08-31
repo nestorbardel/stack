@@ -1,0 +1,1 @@
+docker run -dit --rm --name my-apache2 -p 8080:80 "grupoagni/apache:apigateway"
